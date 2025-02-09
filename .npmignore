@@ -1,0 +1,19 @@
+# Source code
+src/
+
+# Tests
+tests/
+
+# Config files
+tsconfig.json
+.env
+
+# Development files
+node_modules/
+.github/
+.git/
+.gitignore
+.npmrc
+
+# Keep build directory
+!dist/
