@@ -37,6 +37,7 @@
   },
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target=node && tsc",
-    "test": "bun test/setup.ts && NODE_ENV=test bun test ./test/*.spec.ts"
+    "test": "bun test/setup.ts && NODE_ENV=test bun test ./test/*.spec.ts",
+    "publish-package": "bun run test && bun run build && dotenv npm publish"
   }
 }

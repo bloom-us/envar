@@ -1,46 +1,44 @@
-# Type-Safe Environment Variables Manager
+# Type-Safe Environment Variables
 
-A TypeScript library for managing environment variables with strong typing, runtime validation, and flexible transformations.
+A TypeScript library for managing environment variables with strong typing, runtime validation, and flexible parsing.
 
 ## Features
 
-- 🔒 **Type-safe**: Full TypeScript support with proper type inference
-- ✨ **Runtime validation**: Ensures required environment variables are present
-- 🔄 **Flexible transformations**: Built-in parsers for common types (number, boolean, JSON, etc.)
-- 🎯 **Default values**: Support for fallback values when variables are not set
-- 🚨 **Required flags**: Mark critical environment variables that must be present
-- 🎭 **Custom parsers**: Define your own transformation functions
+- Full TypeScript support with precise type inference
+- Runtime validation for required variables
+- Built-in parsers for common types (numbers, booleans, JSON, enums)
+- Custom parser support
+- Default values
+- Zero dependencies
 
 ## Installation
 
 ```bash
-npm install your-package-name
-# or
-yarn add your-package-name
+npm install type-safe-env
 ```
 
-## Usage
-
-### Basic Example
+## Basic Usage
 
 ```typescript
-import { env } from "your-package-name";
+import { env } from "type-safe-env";
 
 const config = env([
-  { k: "PORT", f: parseEnvInt, d: 3000 },
-  { k: "DATABASE_URL", required: true },
-  { k: "DEBUG", f: parseEnvBoolean, d: false },
+  ["PORT", { parser: parseEnvInt, default: 3000 }],
+  ["NODE_ENV", { required: true }],
+  ["API_KEY", { required: true }],
+  ["DEBUG", { parser: parseEnvBoolean, default: false }],
 ]);
 
-// Type-safe access to environment variables
-console.log(config.PORT); // number
-console.log(config.DATABASE_URL); // string
-console.log(config.DEBUG); // boolean
+// TypeScript knows the exact types:
+// config.PORT: number
+// config.NODE_ENV: string
+// config.API_KEY: string
+// config.DEBUG: boolean
 ```
 
-### Built-in Formatters
+## Built-in Parsers
 
-The package includes several built-in formatters for common types:
+The library includes several built-in parsers for common types:
 
 ```typescript
 import {
@@ -50,102 +48,116 @@ import {
   parseEnvJSON,
   parseEnvString,
   parseEnvEnum,
-} from "your-package-name";
+} from "type-safe-env";
 
 const config = env([
-  { k: "PORT", f: parseEnvInt },
-  { k: "PI", f: parseEnvFloat },
-  { k: "ENABLE_FEATURE", f: parseEnvBoolean },
-  { k: "API_CONFIG", f: parseEnvJSON },
-  { k: "USERNAME", f: parseEnvString },
-  { k: "LOG_LEVEL", f: parseEnvEnum(["debug", "info", "warn", "error"]) },
+  ["PORT", { parser: parseEnvInt }],
+  ["RATE_LIMIT", { parser: parseEnvFloat }],
+  ["ENABLE_CACHE", { parser: parseEnvBoolean }],
+  ["API_CONFIG", { parser: parseEnvJSON }],
+  ["NAME", { parser: parseEnvString }],
+  ["LOG_LEVEL", { parser: parseEnvEnum(["debug", "info", "warn", "error"]) }],
 ]);
+```
+
+### Parser Behaviors
+
+- `parseEnvInt`: Converts strings to integers using `parseInt`
+- `parseEnvFloat`: Converts strings to floating-point numbers using `parseFloat`
+- `parseEnvBoolean`: Converts "true" (case-insensitive) to `true`, otherwise `undefined`
+- `parseEnvJSON`: Parses JSON strings into objects, throws on invalid JSON
+- `parseEnvString`: Trims strings and returns `undefined` if empty
+- `parseEnvEnum`: Creates a parser that validates against a set of allowed values
+
+## Advanced Usage
+
+### Custom Parsers
+
+You can create custom parsers for specific needs:
+
+```typescript
+const parsePort = (v: string | undefined) => {
+  const port = parseEnvInt(v);
+  if (port && (port < 1 || port > 65535)) {
+    throw new Error("Port must be between 1 and 65535");
+  }
+  return port;
+};
+
+const config = env([["PORT", { parser: parsePort, required: true }]]);
 ```
 
 ### Required Variables
 
-Mark variables as required to ensure they're present:
+When a variable is marked as required:
+
+- It must be present in the environment
+- Its parsed value cannot be undefined
+- TypeScript will remove `undefined` from the type
 
 ```typescript
 const config = env([
-  { k: "API_KEY", required: true }, // Will throw if not set
-  { k: "API_URL", required: true, f: parseEnvString },
+  ["API_KEY", { required: true }], // Will throw if API_KEY is not set
 ]);
 ```
 
 ### Default Values
 
-Provide fallback values for optional variables:
+Default values are used when:
+
+- The environment variable is not set
+- The parser returns undefined
 
 ```typescript
 const config = env([
-  { k: "PORT", f: parseEnvInt, d: 3000 },
-  { k: "HOST", d: "localhost" },
-  { k: "CACHE_TTL", f: parseEnvInt, d: 3600 },
+  ["PORT", { parser: parseEnvInt, default: 3000 }],
+  ["API_URL", { default: "https://api.example.com" }],
 ]);
 ```
 
-### Custom Transformers
+### Type Inference
 
-Create your own transformation functions:
+The library automatically infers precise types based on your configuration:
 
 ```typescript
-const parseArrayOfInts = (v: string | undefined): number[] | undefined => {
-  if (!v) return undefined;
-  return v.split(",").map(Number);
-};
+const config = env([
+  ["PORT", { parser: parseEnvInt, required: true }],
+  ["API_KEY", { required: true }],
+  ["DEBUG", { parser: parseEnvBoolean, default: false }],
+]);
 
-const config = env([{ k: "ALLOWED_PORTS", f: parseArrayOfInts, d: [80, 443] }]);
+// TypeScript infers:
+// {
+//   readonly PORT: number;
+//   readonly API_KEY: string;
+//   readonly DEBUG: boolean;
+// }
 ```
-
-## API Reference
-
-### `env(keys)`
-
-The main function for configuring environment variables.
-
-Parameters:
-
-- `keys`: An array of environment variable configurations
-
-Each configuration object can include:
-
-- `k`: The environment variable key (required)
-- `f`: A transformation function (optional)
-- `d`: A default value (optional)
-- `required`: Whether the variable is required (optional)
-
-### Built-in Formatters
-
-- `parseEnvInt`: Parse as integer
-- `parseEnvFloat`: Parse as float
-- `parseEnvBoolean`: Parse as boolean ("true" → true)
-- `parseEnvJSON`: Parse as JSON
-- `parseEnvString`: Parse as trimmed string
-- `parseEnvEnum`: Create an enum validator
 
 ## Error Handling
 
 The library throws errors in these cases:
 
-- Required variable is missing
-- JSON parsing fails with `parseEnvJSON`
-- Enum value is invalid with `parseEnvEnum`
+- A required variable is missing or undefined
+- A parser throws an error (e.g., invalid JSON)
+- An enum value doesn't match allowed options
 
-## TypeScript Support
+Example error messages:
 
-The library is written in TypeScript and provides full type inference:
-
-```typescript
-const config = env([{ k: "PORT", f: parseEnvInt, d: 3000 }]);
-
-config.PORT; // TypeScript knows this is a number
 ```
+Missing required environment variable: API_KEY
+Invalid JSON value: {invalid-json}
+Expected one of: debug, info, warn, error
+```
+
+## Best Practices
+
+1. Define all environment variables in one place
+2. Use TypeScript to catch configuration errors early
+3. Add validation in custom parsers when needed
+4. Provide sensible defaults for optional values
+5. Mark security-critical variables as required
 
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
