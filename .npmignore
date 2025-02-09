@@ -2,11 +2,12 @@
 src/
 
 # Tests
-tests/
+test/
 
 # Config files
 tsconfig.json
 .env
+.mocharc.cjs
 
 # Development files
 node_modules/
@@ -14,6 +15,9 @@ node_modules/
 .git/
 .gitignore
 .npmrc
+.npmignore
+package-lock.json
+bun.lock
 
 # Keep build directory
 !dist/
