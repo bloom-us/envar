@@ -1,8 +1,7 @@
 {
   "name": "@bloom-us/envar",
   "description": "Type-safe environment variables manager with runtime validation, flexible transformations, and first-class TypeScript support",
-  "module": "index.ts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "type": "module",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -24,7 +23,8 @@
     "@types/bun": "latest",
     "@types/chai": "^5.0.1",
     "@types/mocha": "^10.0.10",
-    "ts-node": "^10.9.2",
+    "chai": "^5.1.2",
+    "mocha": "^11.1.0",
     "typescript": "^5.0.0"
   },
   "peerDependencies": {

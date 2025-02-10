@@ -9,7 +9,7 @@ import {
   parseEnvJSON,
   parseEnvString,
   parseEnvEnum,
-  env,
+  envar,
   resolve,
 } from "../src/index";
 
@@ -22,13 +22,13 @@ describe("Environment Variable Handling", () => {
     process.env = { ...originalEnv };
   });
 
-  describe("Core env() function", () => {
+  describe("Core envar() function", () => {
     it("should resolve multiple environment variables", () => {
       process.env.TEST_PORT = "3000";
       process.env.TEST_HOST = "localhost";
       process.env.TEST_DEBUG = "true";
 
-      const config = env([
+      const config = envar([
         ["TEST_PORT", { parser: parseEnvInt, default: 8080 }],
         ["TEST_HOST", { default: "127.0.0.1" }],
         ["TEST_DEBUG", { parser: parseEnvBoolean, default: false }],
@@ -43,7 +43,7 @@ describe("Environment Variable Handling", () => {
 
     it("should throw error for missing required variables", () => {
       expect(() =>
-        env([["REQUIRED_VAR", { required: true }]] as const)
+        envar([["REQUIRED_VAR", { required: true }]] as const)
       ).to.throw("Missing required environment variable: REQUIRED_VAR");
     });
 
@@ -51,7 +51,7 @@ describe("Environment Variable Handling", () => {
       process.env.TEST_SETTINGS = '{"timeout":5000,"retries":3}';
       process.env.TEST_MODE = "production";
 
-      const config = env([
+      const config = envar([
         [
           "TEST_SETTINGS",
           {
@@ -117,14 +117,14 @@ describe("Environment Variable Handling", () => {
     describe("parseEnvInt", () => {
       it("should parse valid integers from env", () => {
         process.env.TEST_INT = "123";
-        const config = env([["TEST_INT", { parser: parseEnvInt }]] as const);
+        const config = envar([["TEST_INT", { parser: parseEnvInt }]] as const);
 
         expect(config.TEST_INT).to.equal(123);
       });
 
       it("should ignore not strictly enforce types by a default value if the parser resolves to an unexpected type", () => {
         process.env.TEST_INT = "not-a-number";
-        const config = env([
+        const config = envar([
           ["TEST_INT", { parser: parseEnvInt, default: 500 }],
         ] as const);
         expect(config.TEST_INT).NaN;
@@ -134,7 +134,7 @@ describe("Environment Variable Handling", () => {
     describe("parseEnvFloat", () => {
       it("should parse valid floats from env", () => {
         process.env.TEST_FLOAT = "123.45";
-        const config = env([
+        const config = envar([
           ["TEST_FLOAT", { parser: parseEnvFloat }],
         ] as const);
         expect(config.TEST_FLOAT).to.equal(123.45);
@@ -144,7 +144,7 @@ describe("Environment Variable Handling", () => {
     describe("parseEnvBoolean", () => {
       it("should parse boolean values from env", () => {
         process.env.TEST_BOOL = "true";
-        const config = env([
+        const config = envar([
           ["TEST_BOOL", { parser: parseEnvBoolean }],
         ] as const);
         expect(config.TEST_BOOL).to.be.true;
@@ -154,14 +154,16 @@ describe("Environment Variable Handling", () => {
     describe("parseEnvJSON", () => {
       it("should parse JSON from env", () => {
         process.env.TEST_JSON = '{"name":"test","value":123}';
-        const config = env([["TEST_JSON", { parser: parseEnvJSON }]] as const);
+        const config = envar([
+          ["TEST_JSON", { parser: parseEnvJSON }],
+        ] as const);
         expect(config.TEST_JSON).to.deep.equal({ name: "test", value: 123 });
       });
 
       it("should handle invalid JSON in env", () => {
         process.env.TEST_JSON = "{invalid:json}";
         expect(() =>
-          env([
+          envar([
             ["TEST_JSON", { parser: parseEnvJSON, required: true }],
           ] as const)
         ).to.throw("Invalid JSON value");
@@ -171,7 +173,7 @@ describe("Environment Variable Handling", () => {
     describe("parseEnvString", () => {
       it("should handle string trimming from env", () => {
         process.env.TEST_STRING = "  test-value  ";
-        const config = env([
+        const config = envar([
           ["TEST_STRING", { parser: parseEnvString }],
         ] as const);
         expect(config.TEST_STRING).to.equal("test-value");
@@ -181,7 +183,7 @@ describe("Environment Variable Handling", () => {
     describe("parseEnvEnum", () => {
       it("should validate enum values from env", () => {
         process.env.TEST_ENUM = "development";
-        const config = env([
+        const config = envar([
           [
             "TEST_ENUM",
             {
@@ -195,7 +197,7 @@ describe("Environment Variable Handling", () => {
       it("should handle invalid enum values in env", () => {
         process.env.TEST_ENUM = "invalid";
         expect(() =>
-          env([
+          envar([
             [
               "TEST_ENUM",
               {
