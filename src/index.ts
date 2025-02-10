@@ -55,7 +55,9 @@ type EnvResult<T extends readonly EnvTuple[]> = Readonly<{
 }>;
 
 // The main env function
-export const env = <T extends readonly EnvTuple[]>(tuples: T): EnvResult<T> => {
+export const envar = <T extends readonly EnvTuple[]>(
+  tuples: T
+): EnvResult<T> => {
   return Object.fromEntries(
     tuples.map((tuple) => [tuple[0], resolve(tuple)])
   ) as EnvResult<T>;
