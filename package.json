@@ -1,7 +1,7 @@
 {
   "name": "@bloom-us/envar",
   "description": "Type-safe environment variables manager with runtime validation, flexible transformations, and first-class TypeScript support",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "type": "module",
   "publishConfig": {
     "registry": "https://npm.pkg.github.com"
@@ -36,6 +36,7 @@
     }
   },
   "scripts": {
+    "build": "rm -rf ./dist && bun build ./src/index.ts --outdir ./dist --target=node && tsc",
     "test": "bun test/setup.ts && NODE_ENV=test bun test ./test/*.spec.ts"
   }
 }
